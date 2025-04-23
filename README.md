@@ -2,7 +2,7 @@
 
 The purpose of this algorithm is to calculate the largest solid sphere that can pass through a given pore for each frame of a molecular dynamics simulation (MDS) of the pore. The principle function is PoreCalculator(), which is contained in the PoreCalculator.py file. The description of that function is given below:
 
-PoreCalculator(file, i=1, n=150, name="PoreCalculator", noReturn=False, start = 1, **kwargs):
+    PoreCalculator(file, i=1, n=150, name="PoreCalculator", noReturn=False, start = 1, **kwargs):
     Function calculates the largest solid sphere that can pass through the pore
     described by the .pdb file for each frame of the molecular dynamics simulation.
 
