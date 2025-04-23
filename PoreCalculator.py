@@ -148,11 +148,13 @@ def PoreCalculator(file, i=1, n=150, name="PoreCalculator", noReturn=False, star
                     # For testing
                     if 'testing' in kwargs:
                         if substitute[0]:
+                            print(0)
                             oppv = nm.getPlanarValues(substitute[1][2][0], substitute[1][2][1], substitute[1][2][2])
                             sa = [substitute[1][2][0], substitute[1][2][1], substitute[1][2][2]]
                             temp_cs = AtomicPoint(substitute[1][1].x, substitute[1][1].y, substitute[1][1].z, '', vdwr = testing_cs[1].VanDerWaalsRadius)
                             sp_result = sp.pathGen(temp_cs, oppv[1], sa, frame, GeoGebraPath=temp_cs, GeoGebraEnvironment=kwargs['testing'])
                         else:
+                            print(1)
                             oppv = nm.getPlanarValues(testing_cs[2][0], testing_cs[2][1], testing_cs[2][2])
                             sa = [testing_cs[2][0], testing_cs[2][1], testing_cs[2][2]]
                             sp_result = sp.pathGen(cs[1], oppv[1], sa, frame, GeoGebraPath=cs[1], GeoGebraEnvironment=kwargs['testing'])

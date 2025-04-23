@@ -590,7 +590,6 @@ def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
         A, B, and C1 situated in a line. extCy_dt unit vector in direction 
         extendCylinder should be applied in.
     '''
-    
     #print("twoAtomOrbit")
     nrl = -0.175 # Negative radian limit. Returns more negative than this ignorned. Accepts returns with up to ~-10 degrees. Want to catch angle pushback, but not excessivly
     
@@ -634,13 +633,13 @@ def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
     vec_OC1 = [C1.x - O.x, C1.y - O.y, C1.z - O.z] # Vector from O to C1
     
     O_side = False
-    
+
     # Check for which side of A orbit origin O lies on (shouldn't have tolerance issues like dot product, still confirm with dot product)
     if twoAtomOSide(A, B, O, C1, d):
         O = AtomicPoint(A.x - d * u_AB[0], A.y - d * u_AB[1], A.z - d * u_AB[2], '', vdwr = orbit_r - C1.VanDerWaalsRadius) # Orbit center, radius may be negative right now
         vec_OC1 = [C1.x - O.x, C1.y - O.y, C1.z - O.z] # Vector from O to C1
         O_side = True
-    
+
     # a and b not accurate enough, recalculate the correct values and O location
     if 0.0001 < abs(np.dot(np.array(vec_AB), np.array(vec_OC1))) < 0.1 or O.distBetween(C1, False) < 0.1:
         a = A.distBetween(C1, False)
@@ -652,15 +651,11 @@ def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
         if O_side: O = AtomicPoint(A.x - d * u_AB[0], A.y - d * u_AB[1], A.z - d * u_AB[2], '', vdwr = orbit_r - C1.VanDerWaalsRadius)
         else: O = AtomicPoint(A.x + d * u_AB[0], A.y + d * u_AB[1], A.z + d * u_AB[2], '', vdwr = orbit_r - C1.VanDerWaalsRadius) # Orbit center, radius may be negative right now
         vec_OC1 = [C1.x - O.x, C1.y - O.y, C1.z - O.z] # Vector from O to C1
-    
+
+
     # Check if vec_OC1 perpendicular to vec_AB
     if abs(np.dot(np.array(vec_AB), np.array(vec_OC1))) > 0.1: 
         print('twoAtom dot error')
-        #print(dot(vec_AB, vec_OC1))
-        #A.printCoords(GeoGebraOffset=O)
-        #B.printCoords(GeoGebraOffset=O)
-        #O.printCoords(GeoGebraOffset=O)
-        #C1.printCoords(GeoGebraOffset=O)
         return [-1, 2]
     
     oppv = nm.getPlanarValuesV2(O, u_AB, nm.normalize(vec_OC1)) # orbit principle planar values, used to convert points to orbit basis
@@ -1065,7 +1060,9 @@ def twoAtomTarget(n, dt, o_r, cs_r, oppv, rpv, **kwargs):
     
 
 def twoAtomOSide(A, B, O, C1, d):
-    '''Helper function to test which side of A O lies on.
+    '''Helper function to test which side of A O lies on. Calcualtes alterate O locations and sees which theoretical
+    origin C1 is closest to. O should be the point on the AB line closest to C1, so the closest orbit origin to C1 is
+    kept.
 
     Parameters
     ----------
@@ -1085,22 +1082,13 @@ def twoAtomOSide(A, B, O, C1, d):
     True if O on opposite side of A
     False otherwise
     '''
-    #vec_BA = [A.x - B.x, A.y - B.y, A.z - B.z]      # Vector from B to A
-    #u_BA = nm.normalize(vec_BA)                        # Unit vector from B toward A
-    #vec_BC1 = [C1.x - B.x, C1.y - B.y, C1.z - B.z]  # Vector from B to C1
-    vec_OC1 = [C1.x - O.x, C1.y - O.y, C1.z - O.z]
-    m = magnitude(vec_OC1)
-    test_C1 = AtomicPoint(O.x + m * vec_OC1[0], O.y + m * vec_OC1[1], O.z + m * vec_OC1[2])
+    vec_AB=[B.x-A.x,B.y-A.y,B.z-A.z]
+    u_AB = nm.normalize(vec_AB)
+    # Theoretical origin located on the other size of A with respect to B (rather than on the same side of A with respect to B)
+    O_test = AtomicPoint(A.x - d * u_AB[0], A.y - d * u_AB[1], A.z - d * u_AB[2], '', vdwr=O.VanDerWaalsRadius)
 
-    # Calcuated location should align with C1, otherwise O in wrong direction with respect to A
-    if test_C1.distBetween(C1, False) > 0.001: return True
-    else: return False
-
-    #d = np.dot(np.array(vec_BC1), np.array(u_BA))                          # Distance from B to theoretical origin location
-    
-    # If d larger than the magnitude of vec_BA, O lies on the far side of A rather than between A and B
-    #if d > magnitude(vec_BA): return True
-    #return False
+    if C1.distBetween(O,False) < C1.distBetween(O_test, False): return False
+    else: return True
     
 
 def magnitude(a):
@@ -1212,13 +1200,22 @@ def push_point(val, l, dt):
     
 def atomCollide(a, pointList, **kwargs):
     '''
-    Function checks if given AtomicPoint intersects with any other atoms in the
-    pointList. Returns True if it does so, false otherwise.
+    Function checks if given AtomicPoint intersects with any other atoms in the pointList. Returns True if it does so,
+    false otherwise.
     
-    @peram a AtomicPoint being checked
-    @peram pointList List of AtomicPoints that p is being chekd against
-    @return True if p itersects with any of the atoms in the pointList, returns 
-    false otherwise
+    a : AtomicPoint
+        AtomicPoint being checked
+    pointList : List of AtomicPoints
+        List of AtomicPoints that p is being checked against
+    --- **kwargs ---
+        pv : List of Planar Values [origin, surface normal, ab, in plane normal] from functions in NumericalMethods
+            Prints the colliding point p with coordinates converted into the plane given by the planar values
+        pd : Flag
+            If pd value present, also prints the distance between a and the colliding AtomicPoint (accounting for van
+            der Waals radii)
+    Returns
+    -------
+    True if p intersects with any of the atoms in the pointList, returns false otherwise.
     '''
     for p in pointList:
         if a.distBetween(p, True) < -0.001: 
@@ -1230,8 +1227,7 @@ def atomCollide(a, pointList, **kwargs):
 
 def geoGebraOut(a, cs, epl, pv, r, **kwargs):
     '''
-    Function prints list of atoms within a certain distance of the orbit in
-    GeoGebra Sphere notation
+    Function prints list of atoms within a certain distance of the orbit in GeoGebra Sphere notation
 
     Parameters
     ----------
@@ -1247,7 +1243,7 @@ def geoGebraOut(a, cs, epl, pv, r, **kwargs):
         Orbit radius.
     kwargs
         offset : Float
-            Modifies collision calc distance
+            Modifies collision calculation distance
 
     Returns
     -------
