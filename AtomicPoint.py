@@ -18,6 +18,7 @@ class AtomicPoint:
     @param y 
     @param z 
     @param element 
+    @param VanDerWaalsRadius
     """
     def __init__(self, x, y, z, element='', **kwargs):
         '''
@@ -109,11 +110,7 @@ class AtomicPoint:
         else:
             return math.hypot(temp_x,temp_y)
         
-    """
-    Prints coordinates of an AtomicPoint.
-    
-    @param self The AtomicPoint
-    """    
+
     def printCoords(self, **kwargs):
         '''
         Prints coordinates and Van Der Waals Radius of AtomicPoint to 3 decimal 

@@ -42,6 +42,8 @@ def PoreCalculator(file, i=1, n=150, name="PoreCalculator", noReturn=False, star
     testing : Float
         working_frame must be present. Returns path and environment atoms
         within given distance of the candidate sphere in GeoGebra notation.
+    cs_count :
+        If present, function prints number of candidate spheres generated each frame.
 
     Returns
     -------

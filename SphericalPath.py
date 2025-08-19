@@ -358,7 +358,7 @@ def extendCylinder(A, n, epl, il, **kwargs):
     else: return[1, closest_point, closest_interrupt]   # Collision occured
     
     
-def oneAtomOrbit(A, B, epl, dt):
+def oneAtomOrbit(A, B, epl, dt, debug == False):
     '''Function orbits candidate sphere B around obstruction A until B lies
     at the same z as sphere A, or until the first obstruction B touches as
     travels along the orbit. Returns [-1] if there is an error, [0, B2] if
@@ -380,7 +380,10 @@ def oneAtomOrbit(A, B, epl, dt):
     dt : List of floats [x,y,z]
         Unit vector or desired direction of travel. Currently limited to
         [0,0,1] or [0,0,-1], the +z and -z directions of travel.
-    
+
+    debug : Boolean
+        If true, some debug statements are printed
+
     Returns (1 at end of list indicates oneAtomOrbit
     -------
     [-1, 1] : Error
@@ -436,7 +439,7 @@ def oneAtomOrbit(A, B, epl, dt):
         
         if o_P.x == 0 and o_P.y == 0: # Shouldn't happen, but in theory could occur.
             # Should have a form of error handling   
-            print('oneAtomOrbit exact match error')
+            if debug: print('oneAtomOrbit exact match error')
             return [-1, 1]
         
         u_AP_star = nm.normalize([o_P.x, o_P.y])
@@ -453,7 +456,7 @@ def oneAtomOrbit(A, B, epl, dt):
         for ts in C:
             # Catches errors from orbitCollision
             if ts[1].VanDerWaalsRadius == -1: 
-                print('oneAtomOrbit orbitCollision error')
+                if debug: print('oneAtomOrbit orbitCollision error')
                 return [-1,1]
             
             test_point = nm.convertPoint(ts[1], rpv)         # location B can rotate to before colliding with P in standard basis
@@ -519,7 +522,7 @@ def oneAtomOrbit(A, B, epl, dt):
                     es = P
             # returns keeping B location and giving best environment sphere
             return [1, B, es, 1]
-        print("oneAtomOrbit : No answer!")
+        if debug: print("oneAtomOrbit : No answer!")
         #A.printCoords(GeoGebraOffset=A)
         #B.printCoords(GeoGebraOffset=A)
         #B2.printCoords(GeoGebraOffset=A)
@@ -557,7 +560,7 @@ def oneAtomOrbit(A, B, epl, dt):
     return [1, r_point, p_sol[3], 1]
        
 
-def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
+def twoAtomOrbit(A, B, C1, epl, dt, debug == False):
     '''Calculates how far a candidate sphere can orbit around pair of environmental spheres it is touching.
 
     Parameters
@@ -575,6 +578,8 @@ def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
         Unit vector or desired direction of travel. Currently limited to
         [0,0,1] or [0,0,-1], the +z and -z directions of travel.
 
+    debug : Boolean
+        If True, some debug statements are printed
 
     Returns
     -------
@@ -655,7 +660,7 @@ def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
 
     # Check if vec_OC1 perpendicular to vec_AB
     if abs(np.dot(np.array(vec_AB), np.array(vec_OC1))) > 0.1: 
-        print('twoAtom dot error')
+        if debug: print('twoAtom dot error')
         return [-1, 2]
     
     oppv = nm.getPlanarValuesV2(O, u_AB, nm.normalize(vec_OC1)) # orbit principle planar values, used to convert points to orbit basis
@@ -691,7 +696,7 @@ def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
         
         if o_P.x == 0 and o_P.y == 0: # Shouldn't happen, but in theory could occur.
             # Should have a form of error handling    
-            print('twoAtomOrbit exact match error')
+            if debug: print('twoAtomOrbit exact match error')
             return [-1, 2]
         
         u_AP_star = nm.normalize([o_P.x, o_P.y])
@@ -707,7 +712,7 @@ def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
         for ts in D:
             # Catches errors from orbitCollision
             if ts[1].VanDerWaalsRadius == -1: 
-                print('twoAtomOrbit orbitCollision error')
+                if debug: print('twoAtomOrbit orbitCollision error')
                 return [-1,2]
             
             test_point = nm.convertPoint(ts[1], rpv)         # location C can rotate to before colliding with P in standard basis            
@@ -776,7 +781,7 @@ def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
             # returns keeping C1 location and giving best environment sphere
             return [1, C1, es, 2]
     
-        print("twoAtomOrbit : No answer!")
+        if debug: print("twoAtomOrbit : No answer!")
         #print(atomCollide(O, epl))
         #print('ial')
         #for item in ial: 
@@ -813,7 +818,7 @@ def twoAtomOrbit(A, B, C1, epl, dt): # Might need to improve this method/logic
     return [1, r_point, p_sol[3], 2]
     
 
-def orbitCollisionLocation(A, B1, C, B2, **kwargs):
+def orbitCollisionLocation(A, B1, C, B2, debug==False, **kwargs):
     '''Function finds location an orbiting candidate sphere
     contacts an interrupting environmental sphere.
 
@@ -827,6 +832,10 @@ def orbitCollisionLocation(A, B1, C, B2, **kwargs):
         Sphere interrupting orbit. Projection into orbit plane.
     B2 : AtomicPoint
         Location attempting to be rotated to.
+
+    debug : Boolean
+        If True, some debug statmens will be printed
+
     kwargs
         small_return : if present, garentees return with smallest angle with respect to starting location
         print : prints some values
@@ -852,7 +861,7 @@ def orbitCollisionLocation(A, B1, C, B2, **kwargs):
     if angle(Ref, B2) < math.pi / 2: q = 1
     elif angle(Ref, B2) > math.pi / 2: q = -1
     else:
-        print("180 degree orbit")
+        if debug: print("180 degree orbit")
         #print(angle(Ref, B2))
         #Ref.printCoords()
         #B1.printCoords()
@@ -1010,7 +1019,8 @@ def twoAtomTarget(n, dt, o_r, cs_r, oppv, rpv, **kwargs):
     DT = AtomicPoint(oppv[0].x + dt[0], oppv[0].y + dt[1], oppv[0].z + dt[2], '') # Direction of travel as a unit vector from the orbit origin
     o_dt = nm.convertPoint(DT, oppv) # direction of travel as a unit vector from the origin in the orbit basis
 
-    theta = math.atan(o_dt.y / o_dt.x)   # Angle to C2 from 0 degrees (+x direction) in orbit basis
+    if abs(o_dt.x) < 0.001: theta = math.pi / 2
+    else: theta = math.atan(o_dt.y / o_dt.x)   # Angle to C2 from 0 degrees (+x direction) in orbit basis
     
     x1 = o_r * math.cos(theta)
     y1 = o_r * math.sin(theta)
